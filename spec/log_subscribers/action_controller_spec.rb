@@ -231,6 +231,28 @@ describe Lograge::LogSubscribers::ActionController do
         expect(log_output.string).to_not match(/allocations=/)
       end
     end
+
+    context 'with CPU time' do
+      it 'includes CPU time when available' do
+        event_with_cpu_time = event.dup
+        event_with_cpu_time.define_singleton_method :cpu_time do
+          125.6789
+        end
+
+        subscriber.process_action(event_with_cpu_time)
+        expect(log_output.string).to match(/cpu=125.68/)
+      end
+
+      it 'fails gracefully when CPU time is unavailable' do
+        event_without_cpu_time = event.dup
+        if event_without_cpu_time.respond_to? :cpu_time
+          event_without_cpu_time.instance_eval('undef :cpu_time', __FILE__, __LINE__)
+        end
+
+        subscriber.process_action(event_without_cpu_time)
+        expect(log_output.string).to_not match(/cpu=/)
+      end
+    end
   end
 
   context 'with custom_options configured for lograge output' do

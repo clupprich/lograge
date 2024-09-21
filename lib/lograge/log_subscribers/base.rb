@@ -30,6 +30,7 @@ module Lograge
         data = initial_data(payload)
         data.merge!(extract_status(payload))
         data.merge!(extract_allocations(event))
+        data.merge!(extract_cpu_time(event))
         data.merge!(extract_runtimes(event, payload))
         data.merge!(extract_location)
         data.merge!(extract_unpermitted_params)
@@ -63,6 +64,14 @@ module Lograge
       def extract_allocations(event)
         if (allocations = event.respond_to?(:allocations) && event.allocations)
           { allocations: allocations }
+        else
+          {}
+        end
+      end
+
+      def extract_cpu_time(event)
+        if (cpu_time = event.respond_to?(:cpu_time) && event.cpu_time)
+          { cpu: cpu_time.to_f.round(2) }
         else
           {}
         end
